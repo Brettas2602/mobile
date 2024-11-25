@@ -57,7 +57,7 @@ export default function Index() {
       </TouchableOpacity>
 
       <Text style={styles.utils.text}>Não tem uma conta?</Text>
-      <Link href={'createAccount'}>
+      <Link href={'/createAccount'} asChild>
         <TouchableOpacity>
           <Text style={styles.utils.touchableText}>Cadastre-se</Text>
         </TouchableOpacity>

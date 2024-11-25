@@ -55,6 +55,18 @@ export default {
             borderRadius: 10,
             justifyContent: 'center',
             alignItems: 'center',
-        }
+        },
+
+        nome: {
+            color: 'white',
+            fontSize: 26,
+            fontWeight: 700,
+        },
+
+        description: {
+            color: '#818181',
+            fontSize: 18,
+            fontWeight: 700,
+        },
     }
 }

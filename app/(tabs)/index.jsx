@@ -1,23 +1,66 @@
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import utils from '../../src/styles/utils'
+import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Button } from "react-native";
+import utils from '../../src/styles/utils';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from "react";
-import { TouchableOpacity } from "react-native";
-import MusicCard from '../../src/components/MusicCard'
+import { useEffect, useState } from "react";
+import { Audio } from "expo-av";
+import MusicCard from '../../src/components/MusicCard';
 import ArtistCard from "../../src/components/ArtistCard";
+import axios from "axios";
 
-export default function home() {
+export default function Home() {
+    const [search, setSearch] = useState('');
+    const [selectedOption, setSelectedOption] = useState('Todos');
+    const [currentPathTrack, setCurrentPathTrack] = useState(null); // Rastreia a música atual
+    const [sound, setSound] = useState(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentMusicData, setCurrentMusicData] = useState({ nome: null, artista: null });
 
-    const [search, setSearch] = useState('')
-    const [selectedOption, setSelectedOption] = useState('Todos')
+    const playSound = async (fileName) => {
+        try {
+            if (currentPathTrack !== fileName) {
+                // Interrompe a música anterior, se existir
+                if (sound) {
+                    await sound.stopAsync();
+                    await sound.unloadAsync();
+                    setSound(null);
+                }
 
-    function changeSelectedOption(option) {
-        setSelectedOption(option)
-    }
+                // Carrega e toca a nova música
+                const { sound: newSound } = await Audio.Sound.createAsync({uri: 'file:///C:Users/ferna/OneDrive/Área de Trabalho/IF/Projeto Final/Projeto-Final/assets/audio/Delusions of Saviour - Slayer.mp3'});
+                setSound(newSound);
+                setCurrentPathTrack(fileName);
+                await newSound.playAsync();
+                setIsPlaying(true);
+
+                // Atualiza o status quando a música termina
+                newSound.setOnPlaybackStatusUpdate((status) => {
+                    if (status.didJustFinish) {
+                        setIsPlaying(false);
+                        setSound(null);
+                        setCurrentPathTrack(null);
+                    }
+                });
+            } else if (!isPlaying && sound) {
+                // Retoma a reprodução da música atual
+                await sound.playAsync();
+                setIsPlaying(true);
+            }
+        } catch (error) {
+            console.error('Erro ao reproduzir som:', error);
+        }
+    };
+
+    const pauseSound = async () => {
+        if (sound) {
+            await sound.pauseAsync();
+            setIsPlaying(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
+            {/* Header da tela */}
             <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: '10%' }}>
                     <FontAwesome5 name="user-circle" size={50} color="white" />
@@ -26,6 +69,7 @@ export default function home() {
                 <Ionicons name="add-circle-outline" size={50} color="white" />
             </View>
 
+            {/* Barra de pesquisa */}
             <View style={styles.searchBar}>
                 <Ionicons name="search" size={24} color="#555555" />
                 <TextInput
@@ -37,25 +81,44 @@ export default function home() {
                 />
             </View>
 
+            {/* Filtros de pesquisa */}
             <View style={styles.selectType}>
                 {['Todos', 'Músicas', 'Artistas'].map((option) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         key={option}
-                        style={[styles.option, {backgroundColor: selectedOption === option ? '#67972A' : '#323232'}]}
-                        onPress={() => changeSelectedOption(option)}
+                        style={[styles.option, { backgroundColor: selectedOption === option ? '#67972A' : '#323232' }]}
+                        onPress={() => setSelectedOption(option)}
                     >
                         <Text style={styles.utils.text}>{option}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
             
-            <ScrollView contentContainerStyle={{gap: 10}} style={{flex: 1, width: '100%'}}>
-                <MusicCard nome='Mirror Ball' artista='Você' curtida={true} />
-                <MusicCard nome='Burn for You' artista='Notize' curtida={false} />
+            {/* Musicas e artistas */}
+            <ScrollView contentContainerStyle={{ gap: 10 }} style={{ flex: 1, width: '100%' }}>
+                <MusicCard
+                    nome='Delusions of Savior'
+                    artista='Slayer'
+                    curtida={true}
+                    onPlay={() => {
+                        playSound('Delusions of Saviour - Slayer.mp3');
+                        setCurrentMusicData({ nome: 'Delusions of Savior', artista: 'Slayer' });
+                    }}
+                />
                 <ArtistCard nome='Você' />
             </ScrollView>
+            
+            {/* Controles da musica atual sendo reproduzida */}
+            <View style={styles.currentMusic}>
+                <Text style={styles.utils.nome}>{currentMusicData.nome || 'Nenhuma música selecionada'}</Text>
+                <Text style={styles.utils.description}>{currentMusicData.artista}</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Button title="Play" onPress={() => playSound(currentPathTrack)} disabled={!currentPathTrack || isPlaying} />
+                    <Button title="Pause" onPress={pauseSound} disabled={!isPlaying} />
+                </View>
+            </View>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -65,7 +128,6 @@ const styles = StyleSheet.create({
         paddingTop: 10,
         paddingHorizontal: 10
     },
-
     searchBar: {
         marginVertical: '4%',
         backgroundColor: '#323232',
@@ -75,20 +137,23 @@ const styles = StyleSheet.create({
         gap: '3%',
         flexDirection: 'row'
     },
-
     selectType: {
         flexDirection: 'row',
         width: '100%',
         justifyContent: 'space-between',
         marginBottom: '4%'
     },
-
     option: {
         width: '30%',
         borderRadius: 25,
         paddingVertical: '1%',
         alignItems: 'center',
     },
-
+    currentMusic: {
+        borderColor: 'grey',
+        borderWidth: 3,
+        width: '100%',
+        padding: 10,
+    },
     ...utils
-})
+});
