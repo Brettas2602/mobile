@@ -6,12 +6,12 @@ import { useEffect, useState } from "react";
 import { Audio } from "expo-av";
 import MusicCard from '../../src/components/MusicCard';
 import ArtistCard from "../../src/components/ArtistCard";
-import axios from "axios";
+import { Link } from "expo-router";
 
-export default function Home() {
+export default function home() {
     const [search, setSearch] = useState('');
     const [selectedOption, setSelectedOption] = useState('Todos');
-    const [currentPathTrack, setCurrentPathTrack] = useState(null); // Rastreia a música atual
+    const [currentPathTrack, setCurrentPathTrack] = useState(null);
     const [sound, setSound] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentMusicData, setCurrentMusicData] = useState({ nome: null, artista: null });
@@ -27,7 +27,7 @@ export default function Home() {
                 }
 
                 // Carrega e toca a nova música
-                const { sound: newSound } = await Audio.Sound.createAsync({uri: 'file:///C:Users/ferna/OneDrive/Área de Trabalho/IF/Projeto Final/Projeto-Final/assets/audio/Delusions of Saviour - Slayer.mp3'});
+                const { sound: newSound } = await Audio.Sound.createAsync(require('../../assets/audio/Delusions of Saviour - Slayer.mp3'));
                 setSound(newSound);
                 setCurrentPathTrack(fileName);
                 await newSound.playAsync();
@@ -63,10 +63,14 @@ export default function Home() {
             {/* Header da tela */}
             <View style={{ flexDirection: 'row', width: '100%', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: '10%' }}>
-                    <FontAwesome5 name="user-circle" size={50} color="white" />
+                    <Link href={'/userScreen'} asChild>
+                        <FontAwesome5 name="user-circle" size={50} color="white" />
+                    </Link>
                     <Text style={styles.utils.h1}>Busca</Text>
                 </View>
-                <Ionicons name="add-circle-outline" size={50} color="white" />
+                <Link href={'/addMusic'} asChild>
+                    <Ionicons name="add-circle-outline" size={50} color="white" />
+                </Link>
             </View>
 
             {/* Barra de pesquisa */}
@@ -93,7 +97,7 @@ export default function Home() {
                     </TouchableOpacity>
                 ))}
             </View>
-            
+
             {/* Musicas e artistas */}
             <ScrollView contentContainerStyle={{ gap: 10 }} style={{ flex: 1, width: '100%' }}>
                 <MusicCard
@@ -101,27 +105,42 @@ export default function Home() {
                     artista='Slayer'
                     curtida={true}
                     onPlay={() => {
-                        playSound('Delusions of Saviour - Slayer.mp3');
+                        playSound();
                         setCurrentMusicData({ nome: 'Delusions of Savior', artista: 'Slayer' });
                     }}
                 />
                 <ArtistCard nome='Você' />
             </ScrollView>
-            
+
             {/* Controles da musica atual sendo reproduzida */}
-            <View style={styles.currentMusic}>
-                <Text style={styles.utils.nome}>{currentMusicData.nome || 'Nenhuma música selecionada'}</Text>
-                <Text style={styles.utils.description}>{currentMusicData.artista}</Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Button title="Play" onPress={() => playSound(currentPathTrack)} disabled={!currentPathTrack || isPlaying} />
-                    <Button title="Pause" onPress={pauseSound} disabled={!isPlaying} />
+            {sound
+                ?
+                <View style={styles.currentMusicContainer}>
+                    <View>
+                        <Text style={[styles.utils.nome, { fontSize: 20 }]}>{currentMusicData.nome || 'teste nome musica'}</Text>
+                        <Text style={[styles.utils.description, { fontSize: 16 }]}>{currentMusicData.artista}</Text>
+                    </View>
+                    {!isPlaying 
+                        ?
+                        <TouchableOpacity onPress={playSound}>
+                            <Ionicons name="play-circle-sharp" size={50} color="white" />
+                        </TouchableOpacity>
+                        :
+                        <TouchableOpacity onPress={pauseSound}>
+                            <Ionicons name="pause-circle" size={50} color="white" />
+                        </TouchableOpacity>
+                    }
                 </View>
-            </View>
+                :
+                <></>
+            }
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+    ...utils,
+
     container: {
         flex: 1,
         alignItems: 'center',
@@ -149,11 +168,11 @@ const styles = StyleSheet.create({
         paddingVertical: '1%',
         alignItems: 'center',
     },
-    currentMusic: {
-        borderColor: 'grey',
-        borderWidth: 3,
-        width: '100%',
+    currentMusicContainer: {
+        backgroundColor: '#323232',
+        width: '107%',
         padding: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
     },
-    ...utils
 });

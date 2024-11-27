@@ -26,7 +26,7 @@ export default {
     
         button: {
             width: '100%',
-            height: '7%',
+            paddingVertical: 5,
             backgroundColor: '#007AFF',
             justifyContent: 'center',
             alignItems: 'center',
@@ -59,7 +59,7 @@ export default {
 
         nome: {
             color: 'white',
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: 700,
         },
 

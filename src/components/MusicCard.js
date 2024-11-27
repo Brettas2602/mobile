@@ -5,10 +5,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 export default function MusicCard({ nome, artista, curtida, onPlay }) {
     return (
         <TouchableOpacity style={styles.card} onPress={onPlay}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', width: '87%'}}>
                 <Ionicons name="musical-notes-outline" size={70} color="#606060" />
-                <View>
-                    <Text style={styles.utils.nome}>{nome}</Text>
+                <View style={{width: '75%'}}>
+                    <View>
+                        <Text style={[styles.utils.nome]}>{nome}</Text>
+                    </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: '5%' }}>
                         <Text style={styles.utils.description}>Música</Text>
                         <View style={styles.circle}></View>
@@ -32,7 +34,6 @@ const styles = StyleSheet.create({
         paddingRight: '4%',
         backgroundColor: '#171717',
         flexDirection: 'row',
-        gap: '2%',
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'space-between'
@@ -42,6 +43,6 @@ const styles = StyleSheet.create({
         borderRadius: '50%',
         width: 10,
         height: 10,
-        marginTop: '4%'
+        marginTop: '4%',
     }
 });

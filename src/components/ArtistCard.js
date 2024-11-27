@@ -7,8 +7,8 @@ export default function ArtistCard({ nome }) {
         <TouchableOpacity style={styles.card}>
             <FontAwesome6 name="user-circle" size={70} color="#606060" />
             <View>
-                <Text style={styles.nome}>{nome}</Text>
-                <Text style={styles.description}>Artista</Text>
+                <Text style={styles.utils.nome}>{nome}</Text>
+                <Text style={styles.utils.description}>Artista</Text>
             </View>
         </TouchableOpacity>
     )
@@ -26,17 +26,5 @@ const styles = StyleSheet.create({
         gap: '2%',
         borderRadius: 10,
         alignItems: 'center'
-    },
-
-    nome: {
-        color: 'white',
-        fontSize: 26,
-        fontWeight: 700,
-    },
-
-    description: {
-        color: '#818181',
-        fontSize: 18,
-        fontWeight: 700,
     },
 })

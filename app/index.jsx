@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-nativ
 import utils from "../src/styles/utils";
 import { Link, router } from "expo-router";
 
-export default function Index() {
+export default function index() {
 
   const [email, onChangeEmail] = useState('')
   const [senha, onChangeSenha] = useState('')
@@ -18,7 +18,7 @@ export default function Index() {
       setError(true)
     } else {
       setError(false)
-      router.navigate('/(tabs)')
+      router.navigate('/(tabs)/home')
     }
   }
 

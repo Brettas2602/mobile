@@ -28,7 +28,7 @@ export default function createAccount() {
             setError(true)
         } else {
             setError(false)
-            router.navigate('/(tabs)')
+            router.navigate('/(tabs)/home')
         }
     }
 
