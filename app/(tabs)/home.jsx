@@ -7,6 +7,9 @@ import { Audio } from "expo-av";
 import MusicCard from '../../src/components/MusicCard';
 import ArtistCard from "../../src/components/ArtistCard";
 import { Link } from "expo-router";
+import axios from "axios";
+
+const MUSIC_API_URL = "http://localhost:8080/api/musics"
 
 export default function home() {
     const [search, setSearch] = useState('');
@@ -15,6 +18,17 @@ export default function home() {
     const [sound, setSound] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentMusicData, setCurrentMusicData] = useState({ nome: null, artista: null });
+    const [file, setFile] = useState('')
+    const [musics, setMusics]= useState([])
+
+    async function teste() {
+        const {data} = await axios.get("http://localhost:8080/api/usuario/1")
+        console.log(data)
+    }
+
+    useEffect(() => {
+        teste()
+    }, [])
 
     const playSound = async (fileName) => {
         try {
