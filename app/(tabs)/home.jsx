@@ -1,38 +1,54 @@
-import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, Button } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity, FlatList } from "react-native";
 import utils from '../../src/styles/utils';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Audio } from "expo-av";
 import MusicCard from '../../src/components/MusicCard';
-import ArtistCard from "../../src/components/ArtistCard";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import axios from "axios";
+import { useMusic } from "../../src/context/MusicContext";
+import MusicControls from "../../src/components/MusicControls";
 
-const MUSIC_API_URL = "http://localhost:8080/api/musics"
+const MUSIC_API_URL = "http://192.168.1.7:8080/api/musics"
 
 export default function home() {
     const [search, setSearch] = useState('');
     const [selectedOption, setSelectedOption] = useState('Todos');
-    const [currentPathTrack, setCurrentPathTrack] = useState(null);
-    const [sound, setSound] = useState(null);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentMusicData, setCurrentMusicData] = useState({ nome: null, artista: null });
-    const [file, setFile] = useState('')
     const [musics, setMusics]= useState([])
+    const [filteredMusics, setFilteredMusics] = useState([])
+    const { sound, setSound, isPlaying, setIsPlaying, currentMusicData, setCurrentMusicData } = useMusic();
 
-    async function teste() {
-        const {data} = await axios.get("http://localhost:8080/api/usuario/1")
-        console.log(data)
+    async function loadData() {
+        const {data} = await axios.get(MUSIC_API_URL)
+        setMusics(data)
+        setFilteredMusics(data)
     }
 
+    useFocusEffect(
+        useCallback(() => {
+            loadData()
+        }, [])
+    );
+
     useEffect(() => {
-        teste()
+        loadData()
     }, [])
 
-    const playSound = async (fileName) => {
+    const playSound = async (id) => {
+
+        if (id == null) {
+            return
+        }
+
         try {
-            if (currentPathTrack !== fileName) {
+            const {data} = await axios.get(`${MUSIC_API_URL}/${id}`)
+            
+            if (currentMusicData.nome !== data.nome) {
+                setCurrentMusicData(data)
+                
+                const uri = `${MUSIC_API_URL}/download/${id}`
+
                 // Interrompe a música anterior, se existir
                 if (sound) {
                     await sound.stopAsync();
@@ -41,9 +57,8 @@ export default function home() {
                 }
 
                 // Carrega e toca a nova música
-                const { sound: newSound } = await Audio.Sound.createAsync(require('../../assets/audio/Delusions of Saviour - Slayer.mp3'));
+                const { sound: newSound } = await Audio.Sound.createAsync({uri: uri});
                 setSound(newSound);
-                setCurrentPathTrack(fileName);
                 await newSound.playAsync();
                 setIsPlaying(true);
 
@@ -52,9 +67,8 @@ export default function home() {
                     if (status.didJustFinish) {
                         setIsPlaying(false);
                         setSound(null);
-                        setCurrentPathTrack(null);
                     }
-                });
+                })
             } else if (!isPlaying && sound) {
                 // Retoma a reprodução da música atual
                 await sound.playAsync();
@@ -71,6 +85,13 @@ export default function home() {
             setIsPlaying(false);
         }
     };
+
+    async function searchData(search) {
+        setFilteredMusics(musics.filter((music) => 
+            music.nome.toLowerCase().includes(search.toLowerCase())
+        ))
+        setSearch(search)
+    }
 
     return (
         <View style={styles.container}>
@@ -92,62 +113,27 @@ export default function home() {
                 <Ionicons name="search" size={24} color="#555555" />
                 <TextInput
                     style={[styles.utils.text, { width: '100%' }]}
-                    onChangeText={setSearch}
+                    onChangeText={searchData}
                     value={search}
                     placeholder="O que você deseja ouvir?"
                     placeholderTextColor='#555555'
                 />
             </View>
 
-            {/* Filtros de pesquisa */}
-            <View style={styles.selectType}>
-                {['Todos', 'Músicas', 'Artistas'].map((option) => (
-                    <TouchableOpacity
-                        key={option}
-                        style={[styles.option, { backgroundColor: selectedOption === option ? '#67972A' : '#323232' }]}
-                        onPress={() => setSelectedOption(option)}
-                    >
-                        <Text style={styles.utils.text}>{option}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
             {/* Musicas e artistas */}
-            <ScrollView contentContainerStyle={{ gap: 10 }} style={{ flex: 1, width: '100%' }}>
-                <MusicCard
-                    nome='Delusions of Savior'
-                    artista='Slayer'
-                    curtida={true}
-                    onPlay={() => {
-                        playSound();
-                        setCurrentMusicData({ nome: 'Delusions of Savior', artista: 'Slayer' });
+                <FlatList
+                    contentContainerStyle={{gap: 10}}
+                    data={filteredMusics}
+                    renderItem={({item}) => {
+                        return <MusicCard 
+                            music={item}
+                            onPlay={() => playSound(item.id)}
+                            load={loadData}
+                        /> 
                     }}
                 />
-                <ArtistCard nome='Você' />
-            </ScrollView>
-
             {/* Controles da musica atual sendo reproduzida */}
-            {sound
-                ?
-                <View style={styles.currentMusicContainer}>
-                    <View>
-                        <Text style={[styles.utils.nome, { fontSize: 20 }]}>{currentMusicData.nome || 'teste nome musica'}</Text>
-                        <Text style={[styles.utils.description, { fontSize: 16 }]}>{currentMusicData.artista}</Text>
-                    </View>
-                    {!isPlaying 
-                        ?
-                        <TouchableOpacity onPress={playSound}>
-                            <Ionicons name="play-circle-sharp" size={50} color="white" />
-                        </TouchableOpacity>
-                        :
-                        <TouchableOpacity onPress={pauseSound}>
-                            <Ionicons name="pause-circle" size={50} color="white" />
-                        </TouchableOpacity>
-                    }
-                </View>
-                :
-                <></>
-            }
+            <MusicControls playSound={playSound} pauseSound={pauseSound} />
         </View>
     );
 }
@@ -162,6 +148,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10
     },
     searchBar: {
+        alignItems: 'center',
         marginVertical: '4%',
         backgroundColor: '#323232',
         width: '107%',
@@ -181,12 +168,5 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         paddingVertical: '1%',
         alignItems: 'center',
-    },
-    currentMusicContainer: {
-        backgroundColor: '#323232',
-        width: '107%',
-        padding: 10,
-        flexDirection: 'row',
-        justifyContent: 'space-between'
     },
 });

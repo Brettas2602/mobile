@@ -16,7 +16,7 @@ export default function RootLayout() {
         <Tabs.Screen
           name="curtidas"
           options={{
-            tabBarIcon: ({ color }) => <Ionicons name="heart-outline" size={30} color={color} />,
+            tabBarIcon: ({ color }) => <Ionicons name="heart" size={30} color={color} />,
             tabBarIconStyle: {marginTop: '3%'}
           }}
         />

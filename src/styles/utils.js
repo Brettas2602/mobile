@@ -2,7 +2,6 @@ export default {
     utils: {
         input: {
             width: '100%',
-            height: '8%',
             padding: 10,
             borderRadius: 10,
             backgroundColor: '#323232',
@@ -26,6 +25,7 @@ export default {
     
         button: {
             width: '100%',
+            height: 50,
             paddingVertical: 5,
             backgroundColor: '#007AFF',
             justifyContent: 'center',
@@ -67,6 +67,14 @@ export default {
             color: '#818181',
             fontSize: 18,
             fontWeight: 700,
+        },
+
+        currentMusicContainer: {
+            backgroundColor: '#323232',
+            width: '107%',
+            padding: 10,
+            flexDirection: 'row',
+            justifyContent: 'space-between'
         },
     }
 }

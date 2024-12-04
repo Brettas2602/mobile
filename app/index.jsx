@@ -2,6 +2,10 @@ import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import utils from "../src/styles/utils";
 import { Link, router } from "expo-router";
+import axios from "axios";
+import { useUser } from "@/src/context/UserContext";
+
+USER_API_URL = 'http://192.168.1.7:8080/api/usuario'
 
 export default function index() {
 
@@ -10,21 +14,47 @@ export default function index() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState(false)
 
-  function verificarCampos() {
+  const {setId, setNomeUsuario, setEmail, setSenha} = useUser()
+
+  async function verificarCampos() {
     if (email.trim().length === 0 ||
       senha.trim().length === 0
     ) {
       setMessage('Todos os campos devem ser preenchidos!')
       setError(true)
     } else {
-      setError(false)
-      router.navigate('/(tabs)/home')
+      try {
+        const { data } = await axios.get(`${USER_API_URL}/${email}`)
+        
+        if (!data) {
+          setMessage('Usuário ou senha incorretos!');
+          setError(true);
+          return;
+        }
+        
+        if (data.senha !== senha) {
+          setMessage('Usuário ou senha incorretos!');
+          setError(true);
+          return;
+        }
+        console.log(data.id)
+        setId(data.id)
+        setNomeUsuario(data.nomeDeUsuario);
+        setEmail(data.email);
+        setSenha(data.senha);
+        setError(false);
+        router.replace('/(tabs)/home');
+
+      } catch (error) {
+        console.log('Erro ao fazer login de usuário')
+      }
+
     }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.utils.h1, {marginBottom: 40}]}>Login</Text>
+      <Text style={[styles.utils.h1, { marginBottom: 40 }]}>Login</Text>
 
       <Text style={styles.utils.label}>Email</Text>
       <TextInput
@@ -38,6 +68,7 @@ export default function index() {
 
       <Text style={styles.utils.label}>Senha</Text>
       <TextInput
+        keyboardType="visible-password"
         style={styles.utils.input}
         onChangeText={onChangeSenha}
         value={senha}

@@ -5,9 +5,12 @@ import utils from '../src/styles/utils'
 import { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { Link, router } from "expo-router";
+import axios from "axios";
+import { useUser } from "../src/context/UserContext";
+
+USER_API_URL = 'http://192.168.1.7:8080/api/usuario'
 
 export default function createAccount() {
-
     const [nomeUsuario, onChangeNomeUsuario] = useState('')
     const [email, onChangeEmail] = useState('')
     const [senha, onChangeSenha] = useState('')
@@ -15,7 +18,9 @@ export default function createAccount() {
     const [message, setMessage] = useState('')
     const [error, setError] = useState(false)
 
-    function verificarCampos() {
+    const {setId, setNomeUsuario, setEmail, setSenha} = useUser()
+
+    async function verificarCampos() {
         if (nomeUsuario.trim().length === 0 ||
             email.trim().length === 0 ||
             senha.trim().length === 0 ||
@@ -27,8 +32,32 @@ export default function createAccount() {
             setMessage('As senhas não estão iguais!')
             setError(true)
         } else {
-            setError(false)
-            router.navigate('/(tabs)/home')
+            try {
+                const verifyEmailAlreadyExists = await axios.get(`${USER_API_URL}/${email}`)
+
+                if (!verifyEmailAlreadyExists.data) {
+                    const {data} = await axios.post(USER_API_URL, {
+                        nomeDeUsuario: nomeUsuario,
+                        email: email,
+                        senha: senha
+                    })
+    
+                    setId(data.id)
+                    setNomeUsuario(nomeUsuario)
+                    setEmail(email)
+                    setSenha(senha)
+    
+                    setError(false)
+                    router.navigate('/(tabs)/home')
+                } else {
+                    setMessage('Esse email já está cadastrado!')
+                    setError(true)
+                }
+
+            } catch (error) {
+                console.log('Erro ao criar usuário')
+            }
+
         }
     }
 

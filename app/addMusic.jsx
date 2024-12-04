@@ -5,14 +5,16 @@ import { useState } from "react";
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from "axios";
+import { router } from "expo-router";
 
-const MUSIC_API_URL = "http://localhost:8080/api/musics"
+const MUSIC_API_URL = "http://192.168.1.7:8080/api/musics"
 
 export default function addMusic() {
 
     const [nome, setNome] = useState('')
     const [file, setFile] = useState('')
-    const [fileDetails, setFileDetails] = useState(null)
+    const [fileDetails, setFileDetails] = useState()
+    const [message, setMessage] = useState()
 
     async function pickFile() {
         try {
@@ -24,10 +26,11 @@ export default function addMusic() {
 
             const fileAsset = result.assets[0]
             setFileDetails(fileAsset)
+            console.log(fileAsset)
             setFile(fileAsset.name)
         } catch (err) {
             console.error(err)
-            alert("Error picking file")
+            setFile('Erro ao escolher arquivo')
         }
     }
     
@@ -46,24 +49,20 @@ export default function addMusic() {
             size: fileDetails.size
         }
 
-        await axios.post(
+        const {data} = await axios.post(
             MUSIC_API_URL,
             {
                 name: nome,
-                artista: "teste",
+                artista: "Você",
                 curtida: false,
                 file: fileInfo
-            },
-            {
-                headers: {
-                    Accept: 'application/json'
-                }
             }
         )
 
         setNome('')
         setFile('')
         setFileDetails(null)
+        router.navigate('/(tabs)/home')
     }
 
     return(
@@ -77,8 +76,10 @@ export default function addMusic() {
             />
 
             <TouchableOpacity style={styles.filePicker} onPress={pickFile}>
-                <Text style={[styles.utils.text, {color: '#555555'}]}>Selecione o arquivo .mp3</Text>
-                <FontAwesome6 name="download" size={40} color="#555555" />
+                <View style={{alignItems: 'center'}}>
+                    <Text style={[styles.utils.text, {color: '#555555'}]}>{file || 'Selecione o arquivo .mp3'}</Text>
+                    <FontAwesome6 name="download" size={40} color="#555555" />
+                </View>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.utils.button} onPress={insertMusic}>

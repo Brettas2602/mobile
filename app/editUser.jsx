@@ -1,60 +1,77 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import utils from "../src/styles/utils";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useState } from "react";
 import { router } from "expo-router";
+import { useUser } from "../src/context/UserContext";
+import axios from "axios";
+
+USER_API_URL = 'http://192.168.1.7:8080/api/usuario'
 
 export default function editUSer() {
+    const {id, nomeUsuario, setNomeUsuario, email, setEmail, setSenha} = useUser()
 
-    const [nomeUsuario, setNomeUsuario] = useState('Nome de Usuario')
-    const [email, setEmail] = useState("exemploEmail@gmail.com")
-    const [senha, setSenha] = useState('')
-    const [confirmarSenha, setConfirmarSenha] = useState('')
+    const [campoNomeUsuario, onChangeCampoNomeUsuario] = useState(nomeUsuario)
+    const [campoEmail, onChangeCampoEmail] = useState(email)
+    const [campoSenha, onChangeCampoSenha] = useState('')
+    const [campoConfirmarSenha, onChangeCampoConfirmarSenha] = useState('')
     const [message, setMessage] = useState('')
     const [error, setError] = useState(false)
 
-    function verificarCampos() {
-        if (senha.trim().length === 0 ||
-            confirmarSenha.trim().length === 0) {
+    async function verificarCampos() {
+        if (campoSenha.trim().length === 0 ||
+            campoConfirmarSenha.trim().length === 0) {
             setMessage('Todos os campos devem ser preenchidos!')
             setError(true)
-        } else if (senha != confirmarSenha) {
+        } else if (campoSenha != campoConfirmarSenha) {
             setMessage('As senhas não estão iguais!')
             setError(true)
         } else {
+            const {data} = await axios.put(USER_API_URL, {
+                id: id,
+                nomeDeUsuario: campoNomeUsuario,
+                email: campoEmail,
+                senha: campoSenha
+            })
+
+            setNomeUsuario(data.nomeDeUsuario)
+            setEmail(data.email)
+            setSenha(data.senha)
+
             setError(false)
             router.back()
         }
     }
 
     return (
+        <ScrollView>
         <View style={styles.container}>
-            <FontAwesome5 name="user-circle" size={200} color="white" />`
+            <FontAwesome5 name="user-circle" size={200} color="white" />
 
             <TextInput
-                style={[styles.utils.input, { textAlign: 'center', marginTop: -10 }]}
-                onChangeText={setNomeUsuario}
-                value={nomeUsuario}
+                style={[styles.utils.input, { textAlign: 'center' }]}
+                onChangeText={onChangeCampoNomeUsuario}
+                value={campoNomeUsuario}
             />
 
             <TextInput
                 style={[styles.utils.input, { textAlign: 'center' }]}
-                onChangeText={setEmail}
-                value={email}
+                onChangeText={onChangeCampoEmail}
+                value={campoEmail}
             />
 
             <TextInput
                 style={[styles.utils.input, { textAlign: 'center' }]}
-                onChangeText={setSenha}
-                value={senha}
+                onChangeText={onChangeCampoSenha}
+                value={campoSenha}
                 placeholder="Digite a nova senha"
                 placeholderTextColor='#555555'
             />
 
             <TextInput
                 style={[styles.utils.input, { textAlign: 'center' }]}
-                onChangeText={setConfirmarSenha}
-                value={confirmarSenha}
+                onChangeText={onChangeCampoConfirmarSenha}
+                value={campoConfirmarSenha}
                 placeholder="Confirme a nova senha"
                 placeholderTextColor='#555555'
             />
@@ -70,6 +87,7 @@ export default function editUSer() {
                 <Text style={styles.utils.text}>Confirmar Mudancas</Text>
             </TouchableOpacity>
         </View>
+        </ScrollView>
     )
 }
 
@@ -79,6 +97,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
-        paddingHorizontal: 30,
+        paddingHorizontal: 15,
     }
 })
